@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { CampaignResolver } from './campaign.resolver';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
-  providers: [CampaignResolver],
-  exports: [CampaignResolver],
+  imports: [PrismaModule],
+  providers: [CampaignResolver]
 })
 export class ResolversModule {}
