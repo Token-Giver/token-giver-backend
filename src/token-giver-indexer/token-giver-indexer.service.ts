@@ -1,7 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { FieldElement, v1alpha2 as starknet } from '@apibara/starknet';
-import { validateAndParseAddress, hash } from 'starknet';
+import { validateAndParseAddress, hash, uint256 } from 'starknet';
 import { SharedIndexerService } from 'src/shared-indexer/shared-indexer.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import constants from 'src/common/constants';
 
 @Injectable()
@@ -12,6 +13,9 @@ export class TokenGiverIndexerService {
   constructor(
     @Inject(SharedIndexerService)
     private readonly sharedIndexerService: SharedIndexerService,
+
+    @Inject(PrismaService)
+    private readonly prismaService: PrismaService,
   ) {
     this.eventKeys = [
       validateAndParseAddress(
@@ -71,7 +75,40 @@ export class TokenGiverIndexerService {
   private async handleCampaignCreatedEvent(event: starknet.IEvent) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async handleCampaignUpdatedEvent(event: starknet.IEvent) {}
+  private async handleCampaignUpdatedEvent(event: starknet.IEvent) {
+    const [ownerFelt, campaignAddressFelt] = event.keys;
+
+    const [tokenIdLow, tokenIdtHigh, tokenGiverNftContractAddressFelt] =
+      event.data;
+
+    const owner = validateAndParseAddress(
+      `0x${FieldElement.toBigInt(ownerFelt).toString(16)}`,
+    );
+
+    const campaignAddress = validateAndParseAddress(
+      `0x${FieldElement.toBigInt(campaignAddressFelt).toString(16)}`,
+    );
+
+    const tokenId = Number(
+      uint256.uint256ToBN({
+        low: FieldElement.toBigInt(tokenIdLow),
+        high: FieldElement.toBigInt(tokenIdtHigh),
+      }),
+    );
+
+    const tokenGiverNftContractAddress = validateAndParseAddress(
+      `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`,
+    );
+
+    await this.prismaService.campaign.update({
+      where: { token_id: tokenId },
+      data: {
+        campaign_address: campaignAddress,
+        campaign_owner: owner,
+        token_giver_nft_contract_address: tokenGiverNftContractAddress,
+      },
+    });
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async handleDonationReceivedEvent(event: starknet.IEvent) {}
