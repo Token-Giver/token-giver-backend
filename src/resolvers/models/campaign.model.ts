@@ -1,4 +1,4 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType({ description: 'campaign' })
 export class Campaign {
@@ -11,6 +11,10 @@ export class Campaign {
 
   @Field()
   campaign_owner: string;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  @Field((type) => Float)
+  totalDonations: number;
 
   @Field()
   createdAt: Date;
