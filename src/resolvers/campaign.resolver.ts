@@ -10,16 +10,16 @@ export class CampaignResolver {
 
   constructor(private prismaService: PrismaService) {}
 
-  @Query(() => [Campaign], { 
-    name: 'getAllCampaigns', 
-    nullable: 'items' 
+  @Query(() => [Campaign], {
+    name: 'getAllCampaigns',
+    nullable: 'items',
   })
   async getAllCampaigns(): Promise<Campaign[]> {
     try {
       const campaigns = await this.prismaService.campaign.findMany({
         orderBy: {
-          createdAt: 'desc'
-        }
+          createdAt: 'desc',
+        },
       });
       return campaigns;
     } catch (error) {
@@ -27,7 +27,6 @@ export class CampaignResolver {
       throw new Error('Unable to retrieve campaigns. Please try again later.');
     }
   }
-}
 
   @Query(() => Campaign, { nullable: true })
   async getCampaignById(@Args('id') id: number): Promise<Campaign | null> {
