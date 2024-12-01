@@ -4,6 +4,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
   imports: [PrismaModule],
-  providers: [CampaignResolver]
+  providers: [CampaignResolver],
 })
 export class ResolversModule {}
