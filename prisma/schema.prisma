@@ -17,5 +17,6 @@ model Campaign {
   id               Int      @id
   campaign_address String
   campaign_owner   String
+  totalDonations   Int
   createdAt        DateTime
 }
