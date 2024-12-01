@@ -6,6 +6,7 @@ import {
   v1alpha2 as starknet,
   StarkNetCursor,
 } from '@apibara/starknet';
+import { validateAndParseAddress } from 'starknet';
 import constants from 'src/common/constants';
 import { env } from 'src/common/env';
 import { IndexerConfig } from 'src/common/types';
@@ -66,14 +67,18 @@ export class SharedIndexerService {
 
   private combineFilters(): Uint8Array {
     const combinedFilter = Filter.create().withHeader({ weak: true });
-    const allEventKeys = this.configs.flatMap((config) => config.eventKeys);
-    const uniqueEventKeys = [...new Set(allEventKeys)];
 
-    uniqueEventKeys.forEach((eventKey) => {
-      combinedFilter.addEvent((event) =>
-        event.withKeys([FieldElement.fromBigInt(BigInt(eventKey))]),
-      );
-    });
+    const contractAddressFieldElement = FieldElement.fromBigInt(
+      BigInt(
+        validateAndParseAddress(
+          constants.contracts.sepolia.TOKEN_GIVER_CONTRACT_ADDRESS,
+        ),
+      ),
+    );
+
+    combinedFilter.addEvent((event) =>
+      event.withFromAddress(contractAddressFieldElement),
+    );
 
     return combinedFilter.encode();
   }

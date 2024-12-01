@@ -1,9 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { FieldElement, v1alpha2 as starknet } from '@apibara/starknet';
-import { validateAndParseAddress } from 'starknet';
+import { validateAndParseAddress, hash } from 'starknet';
 import { SharedIndexerService } from 'src/shared-indexer/shared-indexer.service';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { PrismaService } from 'src/prisma/prisma.service';
 import constants from 'src/common/constants';
 
 @Injectable()
@@ -16,10 +14,18 @@ export class TokenGiverIndexerService {
     private readonly sharedIndexerService: SharedIndexerService,
   ) {
     this.eventKeys = [
-      validateAndParseAddress(constants.events_key.CAMPAIGN_CREATED),
-      validateAndParseAddress(constants.events_key.CAMPAIGN_UPDATED),
-      validateAndParseAddress(constants.events_key.DONATION_RECEIVED),
-      validateAndParseAddress(constants.events_key.CAMPAIGN_DELETED),
+      validateAndParseAddress(
+        hash.getSelectorFromName(constants.event_names.CAMPAIGN_CREATED),
+      ),
+      validateAndParseAddress(
+        hash.getSelectorFromName(constants.event_names.CAMPAIGN_UPDATED),
+      ),
+      validateAndParseAddress(
+        hash.getSelectorFromName(constants.event_names.DONATION_RECEIVED),
+      ),
+      validateAndParseAddress(
+        hash.getSelectorFromName(constants.event_names.CAMPAIGN_DELETED),
+      ),
     ];
   }
 
@@ -36,16 +42,24 @@ export class TokenGiverIndexerService {
     const eventKey = validateAndParseAddress(FieldElement.toHex(event.keys[0]));
 
     switch (eventKey) {
-      case validateAndParseAddress(constants.events_key.CAMPAIGN_CREATED):
+      case validateAndParseAddress(
+        hash.getSelectorFromName(constants.event_names.CAMPAIGN_CREATED),
+      ):
         this.handleCampaignCreatedEvent(event);
         break;
-      case validateAndParseAddress(constants.events_key.CAMPAIGN_UPDATED):
+      case validateAndParseAddress(
+        hash.getSelectorFromName(constants.event_names.CAMPAIGN_UPDATED),
+      ):
         this.handleCampaignUpdatedEvent(event);
         break;
-      case validateAndParseAddress(constants.events_key.DONATION_RECEIVED):
+      case validateAndParseAddress(
+        hash.getSelectorFromName(constants.event_names.DONATION_RECEIVED),
+      ):
         this.handleDonationReceivedEvent(event);
         break;
-      case validateAndParseAddress(constants.events_key.CAMPAIGN_DELETED):
+      case validateAndParseAddress(
+        hash.getSelectorFromName(constants.event_names.CAMPAIGN_DELETED),
+      ):
         this.handleCampaignDeletedEvent(event);
         break;
       default:

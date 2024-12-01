@@ -1,7 +1,8 @@
 export default {
   contracts: {
     sepolia: {
-      TOKEN_GIVER_CONTRACT_ADDRESS: '', // TODO: replace with actual address
+      TOKEN_GIVER_CONTRACT_ADDRESS:
+        '0x6a71ae1fad7070249fd5a191701a7851f3d919def3b7fa1278df02ce5e293a4',
       TOKEN_GIVER_ABI: '', // TODO: replace with actual abi
     },
     mainnet: {
@@ -9,11 +10,11 @@ export default {
       TOKEN_GIVER_ABI: '', // TODO: replace with actual abi
     },
   },
-  events_key: {
-    CAMPAIGN_CREATED: '', // TODO: replace with actual event key
-    CAMPAIGN_UPDATED: '', // TODO: replace with actual event key
-    DONATION_RECEIVED: '', // TODO: replace with actual event key
-    CAMPAIGN_DELETED: '', // TODO: replace with actual event key
+  event_names: {
+    CAMPAIGN_CREATED: 'CreateCampaign',
+    CAMPAIGN_UPDATED: 'CampaignUpdata',
+    DONATION_RECEIVED: 'DonationCreated',
+    CAMPAIGN_DELETED: 'CampaignDeleted',
   },
   apibara: {
     maxReceiveMessageLength: 128 * 1_048_576,
