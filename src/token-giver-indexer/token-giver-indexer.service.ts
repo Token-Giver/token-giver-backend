@@ -133,8 +133,16 @@ export class TokenGiverIndexerService {
       `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`,
     );
 
-    await this.prismaService.campaign.update({
+    const campaign = await this.prismaService.campaign.findFirst({
       where: { token_id: tokenId },
+    });
+
+    if (!campaign) {
+      this.logger.warn(`Campaign with token Id ${tokenId} doesn't exist`);
+    }
+
+    await this.prismaService.campaign.update({
+      where: { id: campaign.id },
       data: {
         campaign_address: campaignAddress,
         campaign_owner: owner,
