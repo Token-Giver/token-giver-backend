@@ -78,22 +78,22 @@ export class TokenGiverIndexerService {
       event.data;
 
     const owner = validateAndParseAddress(
-      `0x${FieldElement.toBigInt(ownerFelt).toString(16)}`
+      `0x${FieldElement.toBigInt(ownerFelt).toString(16)}`,
     );
 
     const campaignAddress = validateAndParseAddress(
-      `0x${FieldElement.toBigInt(campaignAddressFelt).toString(16)}`
+      `0x${FieldElement.toBigInt(campaignAddressFelt).toString(16)}`,
     );
 
     const tokenId = Number(
       uint256.uint256ToBN({
         low: FieldElement.toBigInt(tokenIdLow),
         high: FieldElement.toBigInt(tokenIdHigh),
-      })
+      }),
     );
 
     const tokenGiverNftContractAddress = validateAndParseAddress(
-      `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`
+      `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`,
     );
 
     await this.prismaService.campaign.create({
