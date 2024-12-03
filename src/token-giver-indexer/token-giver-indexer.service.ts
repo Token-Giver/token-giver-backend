@@ -72,7 +72,40 @@ export class TokenGiverIndexerService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async handleCampaignCreatedEvent(event: starknet.IEvent) {}
+  private async handleCampaignCreatedEvent(event: starknet.IEvent) {
+    const [ownerFelt, campaignAddressFelt] = event.keys;
+    const [tokenIdLow, tokenIdHigh, tokenGiverNftContractAddressFelt] =
+      event.data;
+
+    const owner = validateAndParseAddress(
+      `0x${FieldElement.toBigInt(ownerFelt).toString(16)}`
+    );
+
+    const campaignAddress = validateAndParseAddress(
+      `0x${FieldElement.toBigInt(campaignAddressFelt).toString(16)}`
+    );
+
+    const tokenId = Number(
+      uint256.uint256ToBN({
+        low: FieldElement.toBigInt(tokenIdLow),
+        high: FieldElement.toBigInt(tokenIdHigh),
+      })
+    );
+
+    const tokenGiverNftContractAddress = validateAndParseAddress(
+      `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`
+    );
+
+    await this.prismaService.campaign.create({
+      data: {
+        token_id: tokenId,
+        campaign_address: campaignAddress,
+        campaign_owner: owner,
+        token_giver_nft_contract_address: tokenGiverNftContractAddress,
+        createdAt: new Date(), // Ensure you track creation time
+      },
+    });
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async handleCampaignUpdatedEvent(event: starknet.IEvent) {
