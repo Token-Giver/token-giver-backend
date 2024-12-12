@@ -1,8 +1,7 @@
 import * as envVar from 'env-var';
 import { config } from 'dotenv';
-import { getEnvPath } from './utils';
 
-config({ path: getEnvPath() });
+config();
 export const env = {
   app: {
     port: envVar.get('APP_PORT').default(3000).asPortNumber(),
