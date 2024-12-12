@@ -5,5 +5,6 @@ import { SharedIndexerModule } from 'src/shared-indexer/shared-indexer.module';
 @Module({
   providers: [TokenGiverIndexerService],
   imports: [SharedIndexerModule],
+  exports: [TokenGiverIndexerService],
 })
 export class TokenGiverIndexerModule {}

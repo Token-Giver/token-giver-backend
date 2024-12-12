@@ -12,7 +12,7 @@ export default {
   },
   event_names: {
     CAMPAIGN_CREATED: 'CreateCampaign',
-    CAMPAIGN_UPDATED: 'CampaignUpdata',
+    CAMPAIGN_UPDATED: 'CampaignUpdated',
     DONATION_RECEIVED: 'DonationCreated',
     CAMPAIGN_DELETED: 'CampaignDeleted',
   },
