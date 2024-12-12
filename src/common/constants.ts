@@ -12,9 +12,8 @@ export default {
   },
   event_names: {
     CAMPAIGN_CREATED: 'CreateCampaign',
-    CAMPAIGN_UPDATED: 'CampaignUpdated',
     DONATION_RECEIVED: 'DonationCreated',
-    CAMPAIGN_DELETED: 'CampaignDeleted',
+    DEPLOYED_TOKEN_GIVER_NFT: 'DeployedTokenGiverNFT',
   },
   apibara: {
     maxReceiveMessageLength: 128 * 1_048_576,

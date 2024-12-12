@@ -22,13 +22,7 @@ export class TokenGiverIndexerService {
         hash.getSelectorFromName(constants.event_names.CAMPAIGN_CREATED),
       ),
       validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.CAMPAIGN_UPDATED),
-      ),
-      validateAndParseAddress(
         hash.getSelectorFromName(constants.event_names.DONATION_RECEIVED),
-      ),
-      validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.CAMPAIGN_DELETED),
       ),
     ];
   }
@@ -52,19 +46,9 @@ export class TokenGiverIndexerService {
         this.handleCampaignCreatedEvent(event);
         break;
       case validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.CAMPAIGN_UPDATED),
-      ):
-        this.handleCampaignUpdatedEvent(event);
-        break;
-      case validateAndParseAddress(
         hash.getSelectorFromName(constants.event_names.DONATION_RECEIVED),
       ):
         this.handleDonationReceivedEvent(event);
-        break;
-      case validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.CAMPAIGN_DELETED),
-      ):
-        this.handleCampaignDeletedEvent(event);
         break;
       default:
         this.logger.warn(`Unknown event type: ${eventKey}`);
@@ -108,52 +92,8 @@ export class TokenGiverIndexerService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async handleCampaignUpdatedEvent(event: starknet.IEvent) {
-    const [ownerFelt, campaignAddressFelt] = event.keys;
-
-    const [tokenIdLow, tokenIdtHigh, tokenGiverNftContractAddressFelt] =
-      event.data;
-
-    const owner = validateAndParseAddress(
-      `0x${FieldElement.toBigInt(ownerFelt).toString(16)}`,
-    );
-
-    const campaignAddress = validateAndParseAddress(
-      `0x${FieldElement.toBigInt(campaignAddressFelt).toString(16)}`,
-    );
-
-    const tokenId = Number(
-      uint256.uint256ToBN({
-        low: FieldElement.toBigInt(tokenIdLow),
-        high: FieldElement.toBigInt(tokenIdtHigh),
-      }),
-    );
-
-    const tokenGiverNftContractAddress = validateAndParseAddress(
-      `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`,
-    );
-
-    const campaign = await this.prismaService.campaign.findFirst({
-      where: { token_id: tokenId },
-    });
-
-    if (!campaign) {
-      this.logger.warn(`Campaign with token Id ${tokenId} doesn't exist`);
-    }
-
-    await this.prismaService.campaign.update({
-      where: { id: campaign.id },
-      data: {
-        campaign_address: campaignAddress,
-        campaign_owner: owner,
-        token_giver_nft_contract_address: tokenGiverNftContractAddress,
-      },
-    });
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async handleDonationReceivedEvent(event: starknet.IEvent) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async handleCampaignDeletedEvent(event: starknet.IEvent) {}
+  private async handleDeployedTokenGiverNftEvent(event: starknet.IEvent) {}
 }
