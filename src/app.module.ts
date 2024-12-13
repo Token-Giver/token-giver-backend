@@ -4,7 +4,6 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { handleDonationReceivedService } from './donation.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { SharedIndexerModule } from './shared-indexer/shared-indexer.module';
 import { TokenGiverIndexerModule } from './token-giver-indexer/token-giver-indexer.module';
@@ -23,6 +22,6 @@ import { ResolversModule } from './resolvers/resolvers.module';
     ResolversModule,
   ],
   controllers: [AppController],
-  providers: [AppService, handleDonationReceivedService],
+  providers: [AppService],
 })
 export class AppModule {}
