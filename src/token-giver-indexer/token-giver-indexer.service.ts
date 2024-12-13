@@ -95,5 +95,30 @@ export class TokenGiverIndexerService {
   private async handleDonationReceivedEvent(event: starknet.IEvent) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async handleDeployedTokenGiverNftEvent(event: starknet.IEvent) {}
+  private async handleDeployedTokenGiverNftEvent(event: starknet.IEvent) {
+    const[campaignIdLow, campaignIHigh, tokenGiverNftContractAddressFelt, blockTimestampFelt] = event.data;
+
+    const campaignId = Number(
+      uint256.uint256ToBN({
+        low: FieldElement.toBigInt(campaignIdLow),
+        high: FieldElement.toBigInt(campaignIHigh),
+      }),
+    );
+
+    const tokenGiverNftContractAddress = validateAndParseAddress(
+      `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`,
+    );
+
+    const blockTimestamp = FieldElement.toBigInt(blockTimestampFelt);
+    // I am to update this in the prisma? because the schema has no place
+    // campaign id and blocktimestamp 
+
+    await this.prismaService.campaign.create({
+      data: {
+        token_giver_nft_contract_address: tokenGiverNftContractAddress,
+        createdAt: new Date(), // Ensure you track creation time
+      },
+    });
+
+  }
 }
