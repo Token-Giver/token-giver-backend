@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { FieldElement, v1alpha2 as starknet } from '@apibara/starknet';
 import { validateAndParseAddress, hash, uint256 } from 'starknet';
 import { SharedIndexerService } from 'src/shared-indexer/shared-indexer.service';
@@ -11,7 +11,7 @@ export class TokenGiverIndexerService {
   private readonly eventKeys: string[];
 
   constructor(
-    @Inject(SharedIndexerService)
+    @Inject(forwardRef(() => SharedIndexerService))
     private readonly sharedIndexerService: SharedIndexerService,
 
     @Inject(PrismaService)
@@ -92,8 +92,8 @@ export class TokenGiverIndexerService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async handleDonationReceivedEvent(event: starknet.IEvent) {}
+  private async handleDonationReceivedEvent(event: starknet.IEvent) { }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async handleDeployedTokenGiverNftEvent(event: starknet.IEvent) {}
+  private async handleDeployedTokenGiverNftEvent(event: starknet.IEvent) { }
 }
