@@ -96,12 +96,17 @@ export class TokenGiverIndexerService {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async handleDeployedTokenGiverNftEvent(event: starknet.IEvent) {
-    const[campaignIdLow, campaignIHigh, tokenGiverNftContractAddressFelt, blockTimestampFelt] = event.data;
+    const [
+      campaignIdLow,
+      campaignIdHigh,
+      tokenGiverNftContractAddressFelt,
+      blockTimestampFelt,
+    ] = event.data;
 
     const campaignId = Number(
       uint256.uint256ToBN({
         low: FieldElement.toBigInt(campaignIdLow),
-        high: FieldElement.toBigInt(campaignIHigh),
+        high: FieldElement.toBigInt(campaignIdHigh),
       }),
     );
 
@@ -109,15 +114,15 @@ export class TokenGiverIndexerService {
       `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`,
     );
 
-    const blockTimestamp = FieldElement.toBigInt(blockTimestampFelt); 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const blockTimestamp = FieldElement.toBigInt(blockTimestampFelt);
 
     await this.prismaService.campaign.update({
-      where: {id: campaignId},
+      where: { id: campaignId },
       data: {
         token_giver_nft_contract_address: tokenGiverNftContractAddress,
-        createdAt: new Date(), 
+        createdAt: new Date(),
       },
     });
-
   }
 }
