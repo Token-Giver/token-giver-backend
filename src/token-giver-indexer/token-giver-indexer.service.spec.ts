@@ -24,7 +24,7 @@ jest.mock('src/common/env', () => ({
       dnaClientUrl: 'dns:///sepolia.starknet.a5a.ch',
       starknetRpc:
         'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_7/',
-    }
+    },
   },
 }));
 
@@ -99,7 +99,9 @@ describe('TokenGiverIndexerService', () => {
     });
 
     it('should handle Prisma errors gracefully', async () => {
-      prismaService.campaign.create.mockRejectedValueOnce(new Error('Database error'));
+      prismaService.campaign.create.mockRejectedValueOnce(
+        new Error('Database error'),
+      );
 
       await expect(
         service['handleCampaignCreatedEvent'](mockValidEvent),
@@ -156,11 +158,8 @@ describe('TokenGiverIndexerService', () => {
       await service.onModuleInit();
 
       expect(sharedIndexerService.registerIndexer).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.any(String),
-          expect.any(String),
-        ]),
-        expect.any(Function)
+        expect.arrayContaining([expect.any(String), expect.any(String)]),
+        expect.any(Function),
       );
     });
   });

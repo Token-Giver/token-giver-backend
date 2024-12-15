@@ -92,8 +92,8 @@ export class TokenGiverIndexerService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async handleDonationReceivedEvent(event: starknet.IEvent) { }
+  private async handleDonationReceivedEvent(event: starknet.IEvent) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async handleDeployedTokenGiverNftEvent(event: starknet.IEvent) { }
+  private async handleDeployedTokenGiverNftEvent(event: starknet.IEvent) {}
 }

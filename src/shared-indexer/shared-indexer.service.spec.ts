@@ -18,7 +18,7 @@ jest.mock('src/common/env', () => ({
       dnaClientUrl: 'dns:///sepolia.starknet.a5a.ch',
       starknetRpc:
         'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_7/',
-    }
+    },
   },
 }));
 
