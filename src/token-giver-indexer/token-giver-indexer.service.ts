@@ -109,14 +109,13 @@ export class TokenGiverIndexerService {
       `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`,
     );
 
-    const blockTimestamp = FieldElement.toBigInt(blockTimestampFelt);
-    // I am to update this in the prisma? because the schema has no place
-    // campaign id and blocktimestamp 
+    const blockTimestamp = FieldElement.toBigInt(blockTimestampFelt); 
 
-    await this.prismaService.campaign.create({
+    await this.prismaService.campaign.update({
+      where: {id: campaignId},
       data: {
         token_giver_nft_contract_address: tokenGiverNftContractAddress,
-        createdAt: new Date(), // Ensure you track creation time
+        createdAt: new Date(), 
       },
     });
 
