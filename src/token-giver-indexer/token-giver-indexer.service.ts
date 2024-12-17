@@ -98,8 +98,38 @@ export class TokenGiverIndexerService {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async handleDonationReceivedEvent(event: starknet.IEvent) {}
+  private async handleDonationReceivedEvent(event: starknet.IEvent) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [campaignIdLow, campaignIdHigh, donorAddress] = event.keys;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [amountLow, amountHigh, tokenIdLow, tokenIdHigh, blockTimestamp] =
+      event.data;
+
+    const campaignId = Number(
+      uint256.uint256ToBN({
+        low: FieldElement.toBigInt(campaignIdLow),
+        high: FieldElement.toBigInt(campaignIdHigh),
+      }),
+    );
+
+    const amount = Number(
+      uint256.uint256ToBN({
+        low: FieldElement.toBigInt(amountLow),
+        high: FieldElement.toBigInt(amountHigh),
+      }),
+    );
+
+    //updating the specific campaign's donation total
+    await this.prismaService.campaign.update({
+      where: { id: campaignId },
+      data: {
+        totalDonations: {
+          increment: Number(amount),
+        },
+      },
+    });
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async handleDeployedTokenGiverNftEvent(event: starknet.IEvent) {
