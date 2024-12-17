@@ -50,6 +50,13 @@ export class TokenGiverIndexerService {
       ):
         this.handleDonationReceivedEvent(event);
         break;
+      case validateAndParseAddress(
+        hash.getSelectorFromName(
+          constants.event_names.DEPLOYED_TOKEN_GIVER_NFT,
+        ),
+      ):
+        this.handleDeployedTokenGiverNftEvent(event);
+        break;
       default:
         this.logger.warn(`Unknown event type: ${eventKey}`);
     }
@@ -121,7 +128,6 @@ export class TokenGiverIndexerService {
       where: { id: campaignId },
       data: {
         token_giver_nft_contract_address: tokenGiverNftContractAddress,
-        createdAt: new Date(),
       },
     });
   }
