@@ -91,26 +91,37 @@ export class TokenGiverIndexerService {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async handleDonationReceivedEvent(event: starknet.IEvent) {
-    // Extract donation details from the event
-    const [campaign_id, amount] = event.keys;
-    this.logger.log(
-      `Processing DonationReceived event for campaign ${campaign_id}`,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [campaignIdLow, campaignIdHigh, donorAddress] = event.keys;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [amountLow, amountHigh, tokenIdLow, tokenIdHigh, blockTimestamp] =
+      event.data;
+
+    const campaignId = Number(
+      uint256.uint256ToBN({
+        low: FieldElement.toBigInt(campaignIdLow),
+        high: FieldElement.toBigInt(campaignIdHigh),
+      }),
+    );
+
+    const amount = Number(
+      uint256.uint256ToBN({
+        low: FieldElement.toBigInt(amountLow),
+        high: FieldElement.toBigInt(amountHigh),
+      }),
     );
 
     //updating the specific campaign's donation total
     await this.prismaService.campaign.update({
-      where: { id: Number(campaign_id) },
+      where: { id: campaignId },
       data: {
         totalDonations: {
           increment: Number(amount),
         },
       },
     });
-    this.logger.log(
-      `Donation of ${amount} successfully updated for campaign ${campaign_id}.`,
-    );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
