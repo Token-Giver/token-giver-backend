@@ -11,8 +11,9 @@ export default {
     },
   },
   event_names: {
-    CAMPAIGN_CREATED: 'CreateCampaign',
-    DONATION_RECEIVED: 'DonationCreated',
+    CREATE_CAMPAIGN: 'CreateCampaign',
+    DONATION_MADE: 'DonationMade',
+    WITHDRAWAL_MADE: 'WithdrawalMade',
     DEPLOYED_TOKEN_GIVER_NFT: 'DeployedTokenGiverNFT',
   },
   apibara: {

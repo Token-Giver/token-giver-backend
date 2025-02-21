@@ -1,21 +1,65 @@
-import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
+import { ObjectType, Field, Int } from '@nestjs/graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { Category } from './category.model';
+import { Image } from './image.model';
+import { JsonValue } from '@prisma/client/runtime/library';
 
-@ObjectType({ description: 'campaign' })
+@ObjectType()
 export class Campaign {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @Field((type) => Int)
-  id: number;
+  @Field(() => Int)
+  campaign_id: number;
 
-  @Field()
+  @Field(() => Int, { nullable: true })
+  token_id: number;
+
+  @Field({ nullable: true })
   campaign_address: string;
 
-  @Field()
+  @Field({ nullable: true })
   campaign_owner: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @Field((type) => Float)
-  totalDonations: number;
+  @Field({ nullable: true })
+  nft_token_uri: string;
+
+  @Field({ nullable: true })
+  token_giver_nft_contract_address: string;
 
   @Field()
-  createdAt: Date;
+  campaign_name: string;
+
+  @Field()
+  campaign_description: string;
+
+  @Field()
+  cover_photo: string;
+
+  @Field(() => GraphQLJSON, { nullable: true })
+  social_links?: JsonValue;
+
+  @Field(() => Int)
+  target_amount: number;
+
+  @Field(() => Int, { nullable: true })
+  total_donations?: number;
+
+  @Field()
+  organizer: string;
+
+  @Field()
+  beneficiary: string;
+
+  @Field(() => [Image])
+  campaign_images: Image[];
+
+  @Field(() => Category, { nullable: true })
+  category?: Category;
+
+  @Field(() => Int, { nullable: true })
+  category_id?: number;
+
+  @Field({ nullable: true })
+  updated_at?: Date;
+
+  @Field({ nullable: true })
+  created_at?: Date;
 }
