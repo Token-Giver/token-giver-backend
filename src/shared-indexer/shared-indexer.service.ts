@@ -54,7 +54,7 @@ export class SharedIndexerService {
       //? we should prolly have a record for latest cursor and use that
       //? so that when system has a restart for what ever reasons
       //? it doesn't start polling data from the beginning
-      cursor: StarkNetCursor.createWithBlockNumber(0),
+      cursor: StarkNetCursor.createWithBlockNumber(540_000),
     });
 
     for await (const message of this.client) {
