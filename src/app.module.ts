@@ -9,7 +9,6 @@ import { PrismaModule } from './prisma/prisma.module';
 import { SharedIndexerModule } from './shared-indexer/shared-indexer.module';
 import { TokenGiverIndexerModule } from './token-giver-indexer/token-giver-indexer.module';
 import { ResolversModule } from './resolvers/resolvers.module';
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -17,6 +16,15 @@ import { ResolversModule } from './resolvers/resolvers.module';
       driver: ApolloDriver,
       autoSchemaFile: true,
       resolvers: { JSON: GraphQLJSON },
+      csrfPrevention: {
+        requestHeaders: [
+          'Accept',
+          'Authorization',
+          'Content-Type',
+          'X-Requested-With',
+          'apollo-require-preflight',
+        ],
+      },
     }),
     PrismaModule,
     SharedIndexerModule,
