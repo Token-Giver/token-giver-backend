@@ -15,6 +15,7 @@ import { ResolversModule } from './resolvers/resolvers.module';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: true,
+      playground: true,
       resolvers: { JSON: GraphQLJSON },
     }),
     PrismaModule,
