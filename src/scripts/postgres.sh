@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-SERVER="postgres";
+SERVER="token-giver";
+USER="postgres"
 PW="postgres";
 DB="tokengiver";
 

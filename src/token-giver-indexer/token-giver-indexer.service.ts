@@ -19,10 +19,13 @@ export class TokenGiverIndexerService {
   ) {
     this.eventKeys = [
       validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.CAMPAIGN_CREATED),
+        hash.getSelectorFromName(constants.event_names.CREATE_CAMPAIGN),
       ),
       validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.DONATION_RECEIVED),
+        hash.getSelectorFromName(constants.event_names.DONATION_MADE),
+      ),
+      validateAndParseAddress(
+        hash.getSelectorFromName(constants.event_names.WITHDRAWAL_MADE),
       ),
     ];
   }
@@ -41,14 +44,19 @@ export class TokenGiverIndexerService {
 
     switch (eventKey) {
       case validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.CAMPAIGN_CREATED),
+        hash.getSelectorFromName(constants.event_names.CREATE_CAMPAIGN),
       ):
         this.handleCampaignCreatedEvent(event);
         break;
       case validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.DONATION_RECEIVED),
+        hash.getSelectorFromName(constants.event_names.DONATION_MADE),
       ):
-        this.handleDonationReceivedEvent(event);
+        this.handleDonationMadeEvent(event);
+        break;
+      case validateAndParseAddress(
+        hash.getSelectorFromName(constants.event_names.WITHDRAWAL_MADE),
+      ):
+        this.handleWithdrawalMadeEvent(event);
         break;
       case validateAndParseAddress(
         hash.getSelectorFromName(
@@ -62,11 +70,17 @@ export class TokenGiverIndexerService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async handleCampaignCreatedEvent(event: starknet.IEvent) {
     const [ownerFelt, campaignAddressFelt] = event.keys;
-    const [tokenIdLow, tokenIdHigh, tokenGiverNftContractAddressFelt] =
-      event.data;
+    const [
+      tokenIdLow,
+      tokenIdHigh,
+      campaignIdLow,
+      campaignIdHigh,
+      nftTokenUriFelt,
+      tokenGiverNftContractAddressFelt,
+      blockTimestampFelt,
+    ] = event.data;
 
     const owner = validateAndParseAddress(
       `0x${FieldElement.toBigInt(ownerFelt).toString(16)}`,
@@ -83,34 +97,44 @@ export class TokenGiverIndexerService {
       }),
     );
 
-    const tokenGiverNftContractAddress = validateAndParseAddress(
-      `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`,
-    );
-
-    await this.prismaService.campaign.create({
-      data: {
-        token_id: tokenId,
-        campaign_address: campaignAddress,
-        campaign_owner: owner,
-        token_giver_nft_contract_address: tokenGiverNftContractAddress,
-        createdAt: new Date(), // Ensure you track creation time
-      },
-    });
-  }
-
-  private async handleDonationReceivedEvent(event: starknet.IEvent) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [campaignIdLow, campaignIdHigh, donorAddress] = event.keys;
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [amountLow, amountHigh, tokenIdLow, tokenIdHigh, blockTimestamp] =
-      event.data;
-
     const campaignId = Number(
       uint256.uint256ToBN({
         low: FieldElement.toBigInt(campaignIdLow),
         high: FieldElement.toBigInt(campaignIdHigh),
       }),
+    );
+
+    const nftTokenUri = FieldElement.toBigInt(nftTokenUriFelt);
+
+    const tokenGiverNftContractAddress = validateAndParseAddress(
+      `0x${FieldElement.toBigInt(tokenGiverNftContractAddressFelt).toString(16)}`,
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const blockTimestamp = FieldElement.toBigInt(blockTimestampFelt);
+
+    await this.prismaService.campaign.update({
+      where: { campaign_id: campaignId },
+      data: {
+        campaign_owner: owner,
+        campaign_address: campaignAddress,
+        token_id: tokenId,
+        nft_token_uri: nftTokenUri.toString(),
+        token_giver_nft_contract_address: tokenGiverNftContractAddress,
+      },
+    });
+  }
+
+  private async handleDonationMadeEvent(event: starknet.IEvent) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [campaignAddressFelt, donorAddressFelt] = event.keys;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [amountLow, amountHigh, tokenIdLow, tokenIdHigh, blockTimestamp] =
+      event.data;
+
+    const campaignAddress = validateAndParseAddress(
+      `0x${FieldElement.toBigInt(campaignAddressFelt).toString(16)}`,
     );
 
     const amount = Number(
@@ -122,10 +146,39 @@ export class TokenGiverIndexerService {
 
     //updating the specific campaign's donation total
     await this.prismaService.campaign.update({
-      where: { id: campaignId },
+      where: { campaign_address: campaignAddress },
       data: {
-        totalDonations: {
+        total_donations: {
           increment: Number(amount),
+        },
+      },
+    });
+  }
+
+  private async handleWithdrawalMadeEvent(event: starknet.IEvent) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [campaignAddressFelt, recipientAddressFelt] = event.keys;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [amountLow, amountHigh, blockTimestampFelt] = event.data;
+
+    const campaignAddress = validateAndParseAddress(
+      `0x${FieldElement.toBigInt(campaignAddressFelt).toString(16)}`,
+    );
+
+    const amount = Number(
+      uint256.uint256ToBN({
+        low: FieldElement.toBigInt(amountLow),
+        high: FieldElement.toBigInt(amountHigh),
+      }),
+    );
+
+    //updating the specific campaign's donation total
+    await this.prismaService.campaign.update({
+      where: { campaign_address: campaignAddress },
+      data: {
+        total_donations: {
+          decrement: Number(amount),
         },
       },
     });
@@ -155,7 +208,7 @@ export class TokenGiverIndexerService {
     const blockTimestamp = FieldElement.toBigInt(blockTimestampFelt);
 
     await this.prismaService.campaign.update({
-      where: { id: campaignId },
+      where: { campaign_id: campaignId },
       data: {
         token_giver_nft_contract_address: tokenGiverNftContractAddress,
       },

@@ -1,8 +1,8 @@
-import { Resolver, Query, Args } from '@nestjs/graphql';
+import { NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Resolver, Query, Args, Mutation, Int } from '@nestjs/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Campaign } from './models/campaign.model';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
+import { CampaignCreateInput } from './dtos/createCampaign.dto';
 
 @Resolver(() => Campaign)
 export class CampaignResolver {
@@ -10,15 +10,30 @@ export class CampaignResolver {
 
   constructor(private prismaService: PrismaService) {}
 
-  @Query(() => [Campaign], {
-    name: 'getAllCampaigns',
-    nullable: 'items',
-  })
+  @Mutation(() => Campaign)
+  async createCampaign(
+    @Args('campaignData') campaignData: CampaignCreateInput,
+  ): Promise<Campaign> {
+    try {
+      return await this.prismaService.campaign.create({
+        data: campaignData,
+        include: { campaign_images: true, category: true },
+      });
+    } catch (error) {
+      this.logger.error('Failed to create campaign', error.stack);
+      throw new Error(
+        'An error occurred while creating the campaign. Please try again later.',
+      );
+    }
+  }
+
+  @Query(() => [Campaign])
   async getAllCampaigns(): Promise<Campaign[]> {
     try {
       const campaigns = await this.prismaService.campaign.findMany({
+        include: { campaign_images: true, category: true },
         orderBy: {
-          createdAt: 'desc',
+          created_at: 'desc',
         },
       });
       return campaigns;
@@ -29,23 +44,44 @@ export class CampaignResolver {
   }
 
   @Query(() => Campaign, { nullable: true })
-  async getCampaignById(@Args('id') id: number): Promise<Campaign | null> {
-    // Validate ID format (assuming UUID format)
-    //TODO: difine other ways to validate the id.
-    if (typeof id !== 'number') {
+  async getCampaignById(
+    @Args('campaignId', { type: () => Int }) campaignId: number,
+  ): Promise<Campaign | null> {
+    if (typeof campaignId !== 'number') {
       throw new BadRequestException('Invalid campaign ID format');
     }
 
-    // Fetch campaign from database
     const campaign = await this.prismaService.campaign.findUnique({
-      where: { id },
+      where: { campaign_id: campaignId },
+      include: { campaign_images: true, category: true },
     });
 
-    // Handle non-existent campaign
     if (!campaign) {
-      throw new NotFoundException(`Campaign with ID ${id} not found`);
+      throw new NotFoundException(`Campaign with ID ${campaignId} not found`);
     }
 
     return campaign;
+  }
+
+  @Query(() => [Campaign])
+  async getCampaignByCategory(@Args('name') name: string): Promise<Campaign[]> {
+    try {
+      const campaigns = await this.prismaService.campaign.findMany({
+        where: { category: { name } },
+        include: { campaign_images: true, category: true },
+        orderBy: {
+          created_at: 'desc',
+        },
+      });
+      return campaigns;
+    } catch (error) {
+      this.logger.error(
+        'Failed to retrieve campaigns by category',
+        error.stack,
+      );
+      throw new Error(
+        'Unable to retrieve campaigns by category. Please try again later.',
+      );
+    }
   }
 }

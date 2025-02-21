@@ -13,12 +13,44 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model campaign {
-  id                               Int      @id @default(autoincrement())
-  token_id                         Int
-  campaign_address                 String
-  campaign_owner                   String
-  totalDonations                   Int?
-  token_giver_nft_contract_address String
-  createdAt                        DateTime
+model Category {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  updated_at DateTime @default(now())
+  created_at DateTime @default(now())
+
+  campaigns Campaign[]
+}
+
+model Image {
+  id         String   @id @default(uuid())
+  url        String
+  created_at DateTime @default(now())
+
+  campaign_id Int
+  campaign    Campaign @relation(fields: [campaign_id], references: [campaign_id], onDelete: Cascade)
+}
+
+model Campaign {
+  campaign_id                      Int       @id
+  token_id                         Int?      @unique()
+  campaign_address                 String?   @unique()
+  campaign_owner                   String?
+  nft_token_uri                    String?
+  token_giver_nft_contract_address String?
+  campaign_name                    String
+  campaign_description             String
+  cover_photo                      String
+  social_links                     Json?
+  target_amount                    Int
+  total_donations                  Int?      @default(0)
+  organizer                        String
+  beneficiary                      String
+  updated_at                       DateTime? @default(now())
+  created_at                       DateTime? @default(now())
+
+  campaign_images Image[]
+
+  category_id Int?
+  category    Category? @relation(fields: [category_id], references: [id], onDelete: Cascade)
 }
