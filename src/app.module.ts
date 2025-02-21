@@ -16,6 +16,7 @@ import { ResolversModule } from './resolvers/resolvers.module';
       driver: ApolloDriver,
       autoSchemaFile: true,
       playground: true,
+      introspection: true,
       resolvers: { JSON: GraphQLJSON },
     }),
     PrismaModule,
