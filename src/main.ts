@@ -7,9 +7,11 @@ async function bootstrap() {
 
   const corsOptions: CorsOptions = {
     origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
+      'Accept',
       'Content-Type',
+      'X-Requested-With',
       'Authorization',
       'x-apollo-operation-name',
       'apollo-require-preflight',
