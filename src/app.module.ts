@@ -16,15 +16,6 @@ import { ResolversModule } from './resolvers/resolvers.module';
       driver: ApolloDriver,
       autoSchemaFile: true,
       resolvers: { JSON: GraphQLJSON },
-      csrfPrevention: {
-        requestHeaders: [
-          'Accept',
-          'Authorization',
-          'Content-Type',
-          'X-Requested-With',
-          'apollo-require-preflight',
-        ],
-      },
     }),
     PrismaModule,
     SharedIndexerModule,
