@@ -23,7 +23,7 @@ export class CampaignCreateInput {
   target_amount: number;
 
   @Field(() => Int, { nullable: true })
-  totalDonations?: number;
+  total_donations?: number;
 
   @Field(() => String)
   organizer: string;
