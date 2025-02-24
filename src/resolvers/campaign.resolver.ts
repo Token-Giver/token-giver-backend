@@ -1,4 +1,10 @@
-import { NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  NotFoundException,
+  BadRequestException,
+  Logger,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Resolver, Query, Args, Mutation, Int } from '@nestjs/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Campaign } from './models/campaign.model';
@@ -11,6 +17,7 @@ export class CampaignResolver {
   constructor(private prismaService: PrismaService) {}
 
   @Mutation(() => Campaign)
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
   async createCampaign(
     @Args('campaignData') campaignData: CampaignCreateInput,
   ): Promise<Campaign> {
@@ -30,13 +37,12 @@ export class CampaignResolver {
   @Query(() => [Campaign])
   async getAllCampaigns(): Promise<Campaign[]> {
     try {
-      const campaigns = await this.prismaService.campaign.findMany({
+      return await this.prismaService.campaign.findMany({
         include: { campaign_images: true, category: true },
         orderBy: {
           created_at: 'desc',
         },
       });
-      return campaigns;
     } catch (error) {
       this.logger.error('Failed to retrieve campaigns', error.stack);
       throw new Error('Unable to retrieve campaigns. Please try again later.');
@@ -66,14 +72,13 @@ export class CampaignResolver {
   @Query(() => [Campaign])
   async getCampaignByCategory(@Args('name') name: string): Promise<Campaign[]> {
     try {
-      const campaigns = await this.prismaService.campaign.findMany({
+      return await this.prismaService.campaign.findMany({
         where: { category: { name } },
         include: { campaign_images: true, category: true },
         orderBy: {
           created_at: 'desc',
         },
       });
-      return campaigns;
     } catch (error) {
       this.logger.error(
         'Failed to retrieve campaigns by category',

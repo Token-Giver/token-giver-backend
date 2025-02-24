@@ -37,6 +37,7 @@
     "@nestjs/graphql": "^12.2.1",
     "@nestjs/platform-express": "^10.0.0",
     "@prisma/client": "^6.0.0",
+    "class-transformer": "^0.5.1",
     "dotenv": "^16.4.5",
     "dotenv-cli": "^7.4.2",
     "env-var": "^7.5.0",
