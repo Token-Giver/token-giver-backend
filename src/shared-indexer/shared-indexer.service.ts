@@ -8,7 +8,7 @@ import {
 } from '@apibara/starknet';
 import { validateAndParseAddress } from 'starknet';
 import constants from 'src/common/constants';
-import { env } from 'src/common/env'; 
+import { env } from 'src/common/env';
 import { IndexerConfig } from 'src/common/types';
 
 @Injectable()
