@@ -58,7 +58,9 @@ export class CampaignResolver {
       const hasNextPage = campaigns.length > limit;
       const nodes = hasNextPage ? campaigns.slice(0, -1) : campaigns;
       const endCursor =
-        nodes.length > 0 ? nodes[nodes.length - 1].campaign_id.toString() : null;
+        nodes.length > 0
+          ? nodes[nodes.length - 1].campaign_id.toString()
+          : null;
 
       return {
         items: nodes,
@@ -102,7 +104,10 @@ export class CampaignResolver {
         },
       });
     } catch (error) {
-      this.logger.error('Failed to retrieve campaigns by category', error.stack);
+      this.logger.error(
+        'Failed to retrieve campaigns by category',
+        error.stack,
+      );
       throw new Error(
         'Unable to retrieve campaigns by category. Please try again later.',
       );
