@@ -80,7 +80,7 @@ export class CampaignResolver {
           created_at: 'desc',
         },
         take: limit,
-        skip: skip, 
+        skip: skip,
         cursor: cursor ? { campaign_id: cursor } : undefined,
       });
 
