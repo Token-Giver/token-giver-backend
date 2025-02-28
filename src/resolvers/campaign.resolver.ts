@@ -9,6 +9,7 @@ import { Resolver, Query, Args, Mutation, Int } from '@nestjs/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Campaign } from './models/campaign.model';
 import { CampaignCreateInput } from './dtos/createCampaign.dto';
+import { PaginatedCampaigns, PaginationInput } from './dtos/pagination.models';
 import { CampaignConnection } from './dtos/getCampaigns.dto';
 
 @Resolver(() => Campaign)
@@ -93,16 +94,38 @@ export class CampaignResolver {
     return campaign;
   }
 
-  @Query(() => [Campaign])
-  async getCampaignByCategory(@Args('name') name: string): Promise<Campaign[]> {
+  @Query(() => PaginatedCampaigns)
+  async getCampaignsByCategory(
+    @Args('name') name: string,
+    @Args('pagination', { nullable: true }) pagination?: PaginationInput,
+  ): Promise<PaginatedCampaigns> {
     try {
-      return await this.prismaService.campaign.findMany({
+      const { cursor, limit, skip } = pagination || {};
+
+      // Fetch campaigns with pagination
+      const campaigns = await this.prismaService.campaign.findMany({
         where: { category: { name } },
         include: { campaign_images: true, category: true },
         orderBy: {
           created_at: 'desc',
         },
+        take: limit,
+        skip: skip,
+        cursor: cursor ? { campaign_id: cursor } : undefined,
       });
+
+      const totalCount = await this.prismaService.campaign.count({
+        where: { category: { name } },
+      });
+
+      // Determine if there is a next page
+      const hasNextPage = campaigns.length === limit;
+
+      return {
+        campaigns,
+        totalCount,
+        hasNextPage,
+      };
     } catch (error) {
       this.logger.error(
         'Failed to retrieve campaigns by category',
