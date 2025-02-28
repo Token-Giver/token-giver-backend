@@ -79,12 +79,11 @@ export class CampaignResolver {
         orderBy: {
           created_at: 'desc',
         },
-        take: limit, // Number of items to retrieve
-        skip: skip, // Number of items to skip
+        take: limit,
+        skip: skip, 
         cursor: cursor ? { campaign_id: cursor } : undefined,
       });
 
-      // Fetch total count of campaigns for the category
       const totalCount = await this.prismaService.campaign.count({
         where: { category: { name } },
       });
