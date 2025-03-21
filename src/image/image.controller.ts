@@ -10,6 +10,9 @@ import {
   MaxFileSizeValidator,
   Header,
   NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -27,6 +30,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 @ApiTags('Image')
 @Controller('image')
 export class ImageController {
+  private readonly logger = new Logger(ImageController.name);
+
   constructor(
     private readonly imageService: ImageService,
     private readonly prisma: PrismaService,
@@ -35,12 +40,6 @@ export class ImageController {
   @Post()
   @ApiOperation({ summary: 'Upload image' })
   @ApiConsumes('multipart/form-data')
-  @ApiParam({
-    name: 'tokenId',
-    required: true,
-    description: 'Token ID for the image',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
   @ApiBody({
     schema: {
       type: 'object',
@@ -48,7 +47,7 @@ export class ImageController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Image file (jpg, jpeg, or png) max 5MB',
+          description: 'Image file (jpg, jpeg, png, or svg) max 5MB',
         },
       },
     },
@@ -59,7 +58,7 @@ export class ImageController {
     schema: {
       type: 'object',
       properties: {
-        tokenId: {
+        uniqueId: {
           type: 'string',
           example: '123e4567-e89b-12d3-a456-426614174000',
         },
@@ -72,7 +71,39 @@ export class ImageController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid file type or size',
+    description: 'Invalid file type, size, or format',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 400 },
+        message: { type: 'string' },
+        error: { type: 'string', example: 'Bad Request' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 413,
+    description: 'File too large',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 413 },
+        message: { type: 'string' },
+        error: { type: 'string', example: 'Payload Too Large' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 500 },
+        message: { type: 'string' },
+        error: { type: 'string', example: 'Internal Server Error' },
+      },
+    },
   })
   @UseInterceptors(
     FileInterceptor('file', {
@@ -92,8 +123,27 @@ export class ImageController {
     )
     file: Express.Multer.File,
   ): Promise<{ uniqueId: string; url: string }> {
-    const { uniqueId, url } = await this.imageService.uploadImage(file);
-    return { uniqueId, url };
+    try {
+      if (!file) {
+        throw new BadRequestException('No file uploaded');
+      }
+
+      const { uniqueId, url } = await this.imageService.uploadImage(file);
+      return { uniqueId, url };
+    } catch (error) {
+      this.logger.error(
+        `Failed to upload image: ${error.message}`,
+        error.stack,
+      );
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      if (error instanceof InternalServerErrorException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to upload image');
+    }
   }
 
   @Get(':uniqueId')
@@ -119,18 +169,54 @@ export class ImageController {
   @ApiResponse({
     status: 404,
     description: 'Image not found',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 404 },
+        message: { type: 'string' },
+        error: { type: 'string', example: 'Not Found' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 500 },
+        message: { type: 'string' },
+        error: { type: 'string', example: 'Internal Server Error' },
+      },
+    },
   })
   @Header('Content-Type', 'image/*')
   async getImage(@Param('uniqueId') uniqueId: string) {
-    const image = await this.prisma.image.findUnique({
-      where: { uniqueId },
-    });
+    try {
+      if (!uniqueId) {
+        throw new BadRequestException('Image ID is required');
+      }
 
-    if (!image) {
-      throw new NotFoundException('Image not found');
+      const image = await this.prisma.image.findUnique({
+        where: { uniqueId },
+      });
+
+      if (!image) {
+        throw new NotFoundException(`Image with ID ${uniqueId} not found`);
+      }
+
+      const key = `${image.uniqueId}${image.fileExtension}`;
+      return await this.imageService.getImage(key);
+    } catch (error) {
+      this.logger.error(`Failed to get image: ${error.message}`, error.stack);
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to get image');
     }
-
-    const key = `${image.uniqueId}${image.fileExtension}`;
-    return await this.imageService.getImage(key);
   }
 }

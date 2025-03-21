@@ -3,11 +3,15 @@ import {
   InternalServerErrorException,
   NotFoundException,
   StreamableFile,
+  BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import {
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
+  S3ServiceException,
+  DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Readable } from 'stream';
@@ -19,9 +23,11 @@ import { env } from '../common/env';
 
 @Injectable()
 export class ImageService {
+  private readonly logger = new Logger(ImageService.name);
   private s3Client: S3Client;
   private readonly bucketName = env.aws.bucketName;
   private readonly baseImageUrl = env.app.apiUrl + '/images';
+  private readonly allowedExtensions = ['.jpg', '.jpeg', '.png', '.svg'];
 
   constructor(private readonly prisma: PrismaService) {
     this.s3Client = new S3Client({
@@ -39,6 +45,13 @@ export class ImageService {
   }> {
     try {
       const fileExtension = this.getFileExtension(file.originalname);
+
+      if (!this.allowedExtensions.includes(fileExtension.toLowerCase())) {
+        throw new BadRequestException(
+          `Invalid file extension. Allowed extensions are: ${this.allowedExtensions.join(', ')}`,
+        );
+      }
+
       const uniqueId = uuidv4();
       const key = `${uniqueId}${fileExtension}`;
 
@@ -49,34 +62,102 @@ export class ImageService {
         ContentType: file.mimetype,
       });
 
-      await this.s3Client.send(command);
+      try {
+        await this.s3Client.send(command);
+      } catch (error) {
+        if (error instanceof S3ServiceException) {
+          this.logger.error(
+            `Failed to upload image to S3: ${error.message}`,
+            error.stack,
+          );
+          throw new InternalServerErrorException(
+            'Failed to upload image to storage service',
+          );
+        }
+        throw error;
+      }
 
-      await this.prisma.image.create({
-        data: {
-          uniqueId,
-          fileExtension,
-        },
-      });
+      try {
+        await this.prisma.image.create({
+          data: {
+            uniqueId,
+            fileExtension,
+          },
+        });
+      } catch (error) {
+        this.logger.error(
+          `Failed to create image record in database: ${error.message}`,
+          error.stack,
+        );
+        // Attempt to clean up the S3 file since database operation failed
+        try {
+          await this.s3Client.send(
+            new DeleteObjectCommand({
+              Bucket: this.bucketName,
+              Key: key,
+            }),
+          );
+        } catch (cleanupError) {
+          this.logger.error(
+            `Failed to clean up S3 file after database error: ${cleanupError.message}`,
+            cleanupError.stack,
+          );
+        }
+        throw new InternalServerErrorException('Failed to save image metadata');
+      }
 
       return { uniqueId, url: `${this.baseImageUrl}/${uniqueId}` };
     } catch (error) {
-      console.log(error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error(
+        `Unexpected error during image upload: ${error.message}`,
+        error.stack,
+      );
       throw new InternalServerErrorException('Failed to upload image');
     }
   }
 
   async getImageUrl(uniqueId: string): Promise<string> {
     try {
-      const command = new GetObjectCommand({
-        Bucket: this.bucketName,
-        Key: uniqueId,
+      const image = await this.prisma.image.findUnique({
+        where: { uniqueId },
       });
 
-      // Generate a signed URL that expires in 24 hours (86400 seconds)
-      return await getSignedUrl(this.s3Client, command, { expiresIn: 86400 });
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      if (!image) {
+        throw new NotFoundException(`Image with ID ${uniqueId} not found`);
+      }
+
+      const key = `${image.uniqueId}${image.fileExtension}`;
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
+
+      try {
+        return await getSignedUrl(this.s3Client, command, { expiresIn: 86400 });
+      } catch (error) {
+        if (error instanceof S3ServiceException) {
+          this.logger.error(
+            `Failed to generate signed URL for image: ${error.message}`,
+            error.stack,
+          );
+          throw new InternalServerErrorException(
+            'Failed to generate image URL',
+          );
+        }
+        throw error;
+      }
     } catch (error) {
-      throw new NotFoundException('Image not found');
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(
+        `Unexpected error getting image URL: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to get image URL');
     }
   }
 
@@ -87,16 +168,39 @@ export class ImageService {
         Key: key,
       });
 
-      const response = await this.s3Client.send(command);
-      const stream = response.Body as Readable;
-      return new StreamableFile(stream);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      try {
+        const response = await this.s3Client.send(command);
+        const stream = response.Body as Readable;
+        return new StreamableFile(stream);
+      } catch (error) {
+        if (error instanceof S3ServiceException) {
+          this.logger.error(
+            `Failed to get image from S3: ${error.message}`,
+            error.stack,
+          );
+          throw new NotFoundException('Image not found in storage');
+        }
+        throw error;
+      }
     } catch (error) {
-      throw new NotFoundException('Image not found');
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(
+        `Unexpected error getting image: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to get image');
     }
   }
 
   private getFileExtension(filename: string): string {
-    return filename.substring(filename.lastIndexOf('.'));
+    const extension = filename
+      .substring(filename.lastIndexOf('.'))
+      .toLowerCase();
+    if (!extension) {
+      throw new BadRequestException('File must have an extension');
+    }
+    return extension;
   }
 }
