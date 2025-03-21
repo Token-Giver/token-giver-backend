@@ -1,5 +1,11 @@
 import { InputType, Field, Int } from '@nestjs/graphql';
-import { IsString, IsNotEmpty, IsInt, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsInt,
+  IsOptional,
+  IsArray,
+} from 'class-validator';
 import GraphQLJSON from 'graphql-type-json';
 import { InputJsonObject } from '@prisma/client/runtime/library';
 
@@ -24,6 +30,11 @@ export class CampaignCreateInput {
   @IsString()
   cover_photo: string;
 
+  @Field(() => [String])
+  @IsNotEmpty()
+  @IsArray()
+  campaign_images: string[];
+
   @Field(() => Int)
   @IsInt()
   target_amount: number;
@@ -47,6 +58,7 @@ export class CampaignCreateInput {
   @IsOptional()
   @IsInt()
   category_id?: number;
+
   @Field(() => GraphQLJSON, { nullable: true })
   social_links?: InputJsonObject;
 }

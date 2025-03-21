@@ -9,6 +9,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { SharedIndexerModule } from './shared-indexer/shared-indexer.module';
 import { TokenGiverIndexerModule } from './token-giver-indexer/token-giver-indexer.module';
 import { ResolversModule } from './resolvers/resolvers.module';
+import { ImageModule } from './image/image.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -23,6 +25,7 @@ import { ResolversModule } from './resolvers/resolvers.module';
     SharedIndexerModule,
     TokenGiverIndexerModule,
     ResolversModule,
+    ImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
