@@ -1,7 +1,6 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Category } from './category.model';
-import { Image } from './image.model';
 import { JsonValue } from '@prisma/client/runtime/library';
 
 @ObjectType()
@@ -48,8 +47,8 @@ export class Campaign {
   @Field()
   beneficiary: string;
 
-  @Field(() => [Image])
-  campaign_images: Image[];
+  @Field(() => [String])
+  campaign_images: string[];
 
   @Field(() => Category, { nullable: true })
   category?: Category;
