@@ -74,6 +74,7 @@ export class ImageService {
 
       // Generate a signed URL that expires in 24 hours (86400 seconds)
       return await getSignedUrl(this.s3Client, command, { expiresIn: 86400 });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new NotFoundException('Image not found');
     }
@@ -89,6 +90,7 @@ export class ImageService {
       const response = await this.s3Client.send(command);
       const stream = response.Body as Readable;
       return new StreamableFile(stream);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new NotFoundException('Image not found');
     }
