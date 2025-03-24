@@ -54,6 +54,11 @@ export class CampaignCreateInput {
   @IsString()
   beneficiary: string;
 
+  @Field(() => String)
+  @IsNotEmpty()
+  @IsString()
+  location: string;
+
   @Field(() => Int, { nullable: true })
   @IsOptional()
   @IsInt()

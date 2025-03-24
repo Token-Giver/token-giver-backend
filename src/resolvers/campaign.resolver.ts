@@ -51,7 +51,7 @@ export class CampaignResolver {
         cursor: cursor ? { campaign_id: parseInt(cursor) } : undefined,
         include: { category: true },
         orderBy: {
-          campaign_id: 'asc',
+          campaign_id: 'desc',
         },
       });
 
@@ -112,7 +112,7 @@ export class CampaignResolver {
         where: { category: { name } },
         include: { category: true },
         orderBy: {
-          campaign_id: 'asc',
+          campaign_id: 'desc',
         },
       });
 
