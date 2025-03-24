@@ -38,35 +38,45 @@ export class TokenGiverIndexerService {
   }
 
   private async handleEvents(event: starknet.IEvent) {
-    this.logger.log('Received event');
+    try {
+      this.logger.log('Received event');
 
-    const eventKey = validateAndParseAddress(FieldElement.toHex(event.keys[0]));
+      const eventKey = validateAndParseAddress(
+        FieldElement.toHex(event.keys[0]),
+      );
 
-    switch (eventKey) {
-      case validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.CREATE_CAMPAIGN),
-      ):
-        this.handleCampaignCreatedEvent(event);
-        break;
-      case validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.DONATION_MADE),
-      ):
-        this.handleDonationMadeEvent(event);
-        break;
-      case validateAndParseAddress(
-        hash.getSelectorFromName(constants.event_names.WITHDRAWAL_MADE),
-      ):
-        this.handleWithdrawalMadeEvent(event);
-        break;
-      case validateAndParseAddress(
-        hash.getSelectorFromName(
-          constants.event_names.DEPLOYED_TOKEN_GIVER_NFT,
-        ),
-      ):
-        this.handleDeployedTokenGiverNftEvent(event);
-        break;
-      default:
-        this.logger.warn(`Unknown event type: ${eventKey}`);
+      switch (eventKey) {
+        case validateAndParseAddress(
+          hash.getSelectorFromName(constants.event_names.CREATE_CAMPAIGN),
+        ):
+          await this.handleCampaignCreatedEvent(event);
+          break;
+        case validateAndParseAddress(
+          hash.getSelectorFromName(constants.event_names.DONATION_MADE),
+        ):
+          await this.handleDonationMadeEvent(event);
+          break;
+        case validateAndParseAddress(
+          hash.getSelectorFromName(constants.event_names.WITHDRAWAL_MADE),
+        ):
+          await this.handleWithdrawalMadeEvent(event);
+          break;
+        case validateAndParseAddress(
+          hash.getSelectorFromName(
+            constants.event_names.DEPLOYED_TOKEN_GIVER_NFT,
+          ),
+        ):
+          await this.handleDeployedTokenGiverNftEvent(event);
+          break;
+        default:
+          this.logger.warn(`Unknown event type: ${eventKey}`);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error processing event: ${error.message}`,
+        error.stack,
+      );
+      // Continue processing other events
     }
   }
 
@@ -113,6 +123,15 @@ export class TokenGiverIndexerService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const blockTimestamp = FieldElement.toBigInt(blockTimestampFelt);
 
+    const campaign = await this.prismaService.campaign.findUnique({
+      where: { campaign_id: campaignId },
+    });
+
+    if (!campaign) {
+      this.logger.error(`Campaign not found for campaign_id: ${campaignId}`);
+      return;
+    }
+
     await this.prismaService.campaign.update({
       where: { campaign_id: campaignId },
       data: {
@@ -144,6 +163,17 @@ export class TokenGiverIndexerService {
       }),
     );
 
+    const campaign = await this.prismaService.campaign.findUnique({
+      where: { campaign_address: campaignAddress },
+    });
+
+    if (!campaign) {
+      this.logger.error(
+        `Campaign not found for campaign_address: ${campaignAddress}`,
+      );
+      return;
+    }
+
     //updating the specific campaign's donation total
     await this.prismaService.campaign.update({
       where: { campaign_address: campaignAddress },
@@ -172,6 +202,17 @@ export class TokenGiverIndexerService {
         high: FieldElement.toBigInt(amountHigh),
       }),
     );
+
+    const campaign = await this.prismaService.campaign.findUnique({
+      where: { campaign_address: campaignAddress },
+    });
+
+    if (!campaign) {
+      this.logger.error(
+        `Campaign not found for campaign_address: ${campaignAddress}`,
+      );
+      return;
+    }
 
     //updating the specific campaign's donation total
     await this.prismaService.campaign.update({
@@ -206,6 +247,15 @@ export class TokenGiverIndexerService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const blockTimestamp = FieldElement.toBigInt(blockTimestampFelt);
+
+    const campaign = await this.prismaService.campaign.findUnique({
+      where: { campaign_id: campaignId },
+    });
+
+    if (!campaign) {
+      this.logger.error(`Campaign not found for campaign_id: ${campaignId}`);
+      return;
+    }
 
     await this.prismaService.campaign.update({
       where: { campaign_id: campaignId },
