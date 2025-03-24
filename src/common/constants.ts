@@ -2,7 +2,7 @@ export default {
   contracts: {
     sepolia: {
       TOKEN_GIVER_CONTRACT_ADDRESS:
-        '0x6a71ae1fad7070249fd5a191701a7851f3d919def3b7fa1278df02ce5e293a4',
+        '0x070790e665f1ca28d58b51d42bf1c468da844a54cf626ede7bd01afabd2ee488',
       TOKEN_GIVER_ABI: '', // TODO: replace with actual abi
     },
     mainnet: {
