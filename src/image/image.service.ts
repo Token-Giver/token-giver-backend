@@ -39,6 +39,21 @@ export class ImageService {
     });
   }
 
+  async uploadImages(
+    files: Express.Multer.File[],
+  ): Promise<Array<{ uniqueId: string; url: string }>> {
+    try {
+      const uploadPromises = files.map((file) => this.uploadImage(file));
+      return await Promise.all(uploadPromises);
+    } catch (error) {
+      this.logger.error(
+        `Unexpected error during multiple image uploads: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to upload images');
+    }
+  }
+
   async uploadImage(file: Express.Multer.File): Promise<{
     uniqueId: string;
     url: string;
