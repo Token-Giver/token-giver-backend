@@ -56,6 +56,9 @@ export class Campaign {
   @Field(() => Int, { nullable: true })
   category_id?: number;
 
+  @Field()
+  location: string;
+
   @Field({ nullable: true })
   updated_at?: Date;
 
