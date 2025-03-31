@@ -3,7 +3,7 @@ import {
   Post,
   Param,
   Controller,
-  UploadedFile,
+  UploadedFiles,
   ParseFilePipe,
   UseInterceptors,
   FileTypeValidator,
@@ -14,7 +14,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
@@ -38,33 +38,40 @@ export class ImageController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Upload image' })
+  @ApiOperation({ summary: 'Upload one or more images' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'Image file (jpg, jpeg, png, or svg) max 5MB',
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+            description: 'Image file (jpg, jpeg, png, or svg) max 5MB',
+          },
+          description: 'One or more image files',
         },
       },
     },
   })
   @ApiResponse({
     status: 201,
-    description: 'Image uploaded successfully',
+    description: 'Images uploaded successfully',
     schema: {
-      type: 'object',
-      properties: {
-        uniqueId: {
-          type: 'string',
-          example: '123e4567-e89b-12d3-a456-426614174000',
-        },
-        url: {
-          type: 'string',
-          example: 'https://example.com/images/123e4567.jpg',
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          uniqueId: {
+            type: 'string',
+            example: '123e4567-e89b-12d3-a456-426614174000',
+          },
+          url: {
+            type: 'string',
+            example: 'https://example.com/images/123e4567.jpg',
+          },
         },
       },
     },
@@ -106,14 +113,14 @@ export class ImageController {
     },
   })
   @UseInterceptors(
-    FileInterceptor('file', {
+    FilesInterceptor('files', 10, {
       limits: {
         fileSize: 5 * 1024 * 1024, // 5MB in bytes
       },
     }),
   )
-  async uploadImage(
-    @UploadedFile(
+  async uploadImages(
+    @UploadedFiles(
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
@@ -121,18 +128,17 @@ export class ImageController {
         ],
       }),
     )
-    file: Express.Multer.File,
-  ): Promise<{ uniqueId: string; url: string }> {
+    files: Express.Multer.File[],
+  ): Promise<Array<{ uniqueId: string; url: string }>> {
     try {
-      if (!file) {
-        throw new BadRequestException('No file uploaded');
+      if (!files || files.length === 0) {
+        throw new BadRequestException('No files uploaded');
       }
 
-      const { uniqueId, url } = await this.imageService.uploadImage(file);
-      return { uniqueId, url };
+      return await this.imageService.uploadImages(files);
     } catch (error) {
       this.logger.error(
-        `Failed to upload image: ${error.message}`,
+        `Failed to upload images: ${error.message}`,
         error.stack,
       );
 
@@ -142,7 +148,7 @@ export class ImageController {
       if (error instanceof InternalServerErrorException) {
         throw error;
       }
-      throw new InternalServerErrorException('Failed to upload image');
+      throw new InternalServerErrorException('Failed to upload images');
     }
   }
 
