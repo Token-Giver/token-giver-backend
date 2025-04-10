@@ -39,10 +39,11 @@ model Campaign {
   campaign_name                    String
   campaign_description             String
   cover_photo                      String
-  campaign_images                  String[]
+  campaign_images                  String[]  @default([])
   social_links                     Json?
   target_amount                    Int
   total_donations                  Int?      @default(0)
+  donations_count                  Int?      @default(0)
   organizer                        String
   location                         String
   beneficiary                      String

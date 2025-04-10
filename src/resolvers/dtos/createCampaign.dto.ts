@@ -30,10 +30,10 @@ export class CampaignCreateInput {
   @IsString()
   cover_photo: string;
 
-  @Field(() => [String])
-  @IsNotEmpty()
+  @Field(() => [String], { nullable: true })
+  @IsOptional()
   @IsArray()
-  campaign_images: string[];
+  campaign_images?: string[];
 
   @Field(() => Int)
   @IsInt()

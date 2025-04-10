@@ -20,10 +20,10 @@
     "test:cov": "dotenv -e .env.sample -- jest --coverage",
     "test:debug": "dotenv -e .env.sample -- node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "dotenv -e .env.sample -- jest --config ./test/jest-e2e.json",
-    "prisma:generate": "dotenv -e .env.local -- npx prisma generate",
+    "prisma:generate": "dotenv -e .env -- npx prisma generate",
     "prisma:push": "dotenv -e .env -- npx prisma db push",
-    "prisma:studio": "dotenv -e .env.local -- npx prisma studio",
-    "prisma:migrate:dev": "dotenv -e .env.local -- npx prisma migrate dev",
+    "prisma:studio": "dotenv -e .env -- npx prisma studio",
+    "prisma:migrate:dev": "dotenv -e .env -- npx prisma migrate dev",
     "start:dev:db": "bash src/scripts/postgres.sh"
   },
   "dependencies": {
