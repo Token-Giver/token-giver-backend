@@ -181,6 +181,9 @@ export class TokenGiverIndexerService {
         total_donations: {
           increment: Number(amount),
         },
+        donations_count: {
+          increment: 1,
+        },
       },
     });
   }
