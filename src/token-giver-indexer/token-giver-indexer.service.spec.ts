@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TokenGiverIndexerService } from './token-giver-indexer.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { SharedIndexerService } from '../shared-indexer/shared-indexer.service';
 import { v1alpha2 as starknet, FieldElement } from '@apibara/starknet';
-import { PrismaClient } from '@prisma/client';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { validateAndParseAddress } from 'starknet';
+import { IPrismaService, PRISMA_SERVICE } from 'src/prisma/prisma.interface';
+import { ISharedIndexerService, SHARED_INDEXER_SERVICE } from 'src/shared-indexer/shared-indexer.interface';
+import { TOKEN_GIVER_INDEXER_SERVICE } from './token-giver-indexer.interface';
 import 'src/common/env';
 
 jest.mock('src/common/env', () => ({
@@ -36,9 +36,9 @@ function parseFelt(felt: unknown): string {
 
 describe('TokenGiverIndexerService', () => {
   let service: TokenGiverIndexerService;
-  let prismaService: DeepMockProxy<PrismaClient>;
+  let prismaService: DeepMockProxy<IPrismaService>;
   let module: TestingModule;
-  let sharedIndexerService: jest.Mocked<SharedIndexerService>;
+  let sharedIndexerService: jest.Mocked<ISharedIndexerService>;
 
   // Mock valid event data
   const mockValidEvent = {
@@ -54,26 +54,32 @@ describe('TokenGiverIndexerService', () => {
   } as starknet.IEvent;
 
   beforeEach(async () => {
-    const prismaServiceMock = mockDeep<PrismaClient>();
-    const sharedIndexerServiceMock = { registerIndexer: jest.fn() };
+    const prismaServiceMock = mockDeep<IPrismaService>();
+    const sharedIndexerServiceMock = {
+      registerIndexer: jest.fn(),
+      onModuleInit: jest.fn()
+    };
 
     module = await Test.createTestingModule({
       providers: [
-        TokenGiverIndexerService,
         {
-          provide: PrismaService,
+          provide: TOKEN_GIVER_INDEXER_SERVICE,
+          useClass: TokenGiverIndexerService,
+        },
+        {
+          provide: PRISMA_SERVICE,
           useValue: prismaServiceMock,
         },
         {
-          provide: SharedIndexerService,
+          provide: SHARED_INDEXER_SERVICE,
           useValue: sharedIndexerServiceMock,
         },
       ],
     }).compile();
 
-    service = module.get<TokenGiverIndexerService>(TokenGiverIndexerService);
-    prismaService = module.get(PrismaService);
-    sharedIndexerService = module.get(SharedIndexerService);
+    service = module.get<TokenGiverIndexerService>(TOKEN_GIVER_INDEXER_SERVICE);
+    prismaService = module.get(PRISMA_SERVICE);
+    sharedIndexerService = module.get(SHARED_INDEXER_SERVICE);
   });
 
   it('should be defined', () => {

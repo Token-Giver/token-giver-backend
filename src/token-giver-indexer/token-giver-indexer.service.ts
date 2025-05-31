@@ -1,21 +1,22 @@
 import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { FieldElement, v1alpha2 as starknet } from '@apibara/starknet';
 import { validateAndParseAddress, hash, uint256 } from 'starknet';
-import { SharedIndexerService } from 'src/shared-indexer/shared-indexer.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { ISharedIndexerService, SHARED_INDEXER_SERVICE } from 'src/shared-indexer/shared-indexer.interface';
+import { IPrismaService, PRISMA_SERVICE } from 'src/prisma/prisma.interface';
+import { ITokenGiverIndexerService, TOKEN_GIVER_INDEXER_SERVICE } from './token-giver-indexer.interface';
 import constants from 'src/common/constants';
 
 @Injectable()
-export class TokenGiverIndexerService {
+export class TokenGiverIndexerService implements ITokenGiverIndexerService {
   private readonly logger = new Logger(TokenGiverIndexerService.name);
   private readonly eventKeys: string[];
 
   constructor(
-    @Inject(forwardRef(() => SharedIndexerService))
-    private readonly sharedIndexerService: SharedIndexerService,
+    @Inject(SHARED_INDEXER_SERVICE)
+    private readonly sharedIndexerService: ISharedIndexerService,
 
-    @Inject(PrismaService)
-    private readonly prismaService: PrismaService,
+    @Inject(PRISMA_SERVICE)
+    private readonly prismaService: IPrismaService,
   ) {
     this.eventKeys = [
       validateAndParseAddress(
@@ -37,7 +38,7 @@ export class TokenGiverIndexerService {
     );
   }
 
-  private async handleEvents(event: starknet.IEvent) {
+  async handleEvents(event: starknet.IEvent) {
     try {
       this.logger.log('Received event');
 
