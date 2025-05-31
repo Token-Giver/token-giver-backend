@@ -10,9 +10,10 @@ import { validateAndParseAddress } from 'starknet';
 import constants from 'src/common/constants';
 import { env } from 'src/common/env';
 import { IndexerConfig } from 'src/common/types';
+import { ISharedIndexerService } from './shared-indexer.interface';
 
 @Injectable()
-export class SharedIndexerService {
+export class SharedIndexerService implements ISharedIndexerService {
   private readonly logger = new Logger(SharedIndexerService.name);
   private readonly client: StreamClient;
   private configs: IndexerConfig[] = [];
